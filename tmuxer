@@ -222,7 +222,7 @@ if [[ ${_TMUXER_TMUX_RUNNING} == 0 && -n "${TMUX+set}" ]]; then
         # create new window in our session to hold our panes
         TMUXER_SESSION="$(tmux display-message -p '#{session_name}')"
         TMUXER_WINDOW_NUMBER=$(( $(tmux list-windows -t "${TMUXER_SESSION}" -F '#{window_index}' | sort -rn | head -n1) + 1 ))
-        tmux new-window -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}" -n "TMUXER-$$" -c "${TMUXER_WORK_DIR}"
+        tmux new-window -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}" -n "${TMUXER_WINDOW_NAME:-"TMUXER-$$"}" -c "${TMUXER_WORK_DIR}"
     fi
 else
     # tmux not running, need new session anyway

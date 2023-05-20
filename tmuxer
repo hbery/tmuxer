@@ -7,8 +7,8 @@ die () {
     exit 1
 }
 
-MAJOR_BASH_VERSION=$(echo $BASH_VERSION | cut -d '.' -f 1)
-if [[ $MAJOR_BASH_VERSION < 4 ]]
+MAJOR_BASH_VERSION=$(echo "$BASH_VERSION" | cut -d '.' -f 1)
+if [[ $MAJOR_BASH_VERSION -lt 4 ]]
 then
   die "You must use a Bash shell that is >= version 4 (you're on $BASH_VERSION)"
 fi
@@ -18,6 +18,7 @@ readonly _TMUXER_SUBST_STRING="{}"
 readonly _TMUXER_DEFAULT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/tmuxer"
 declare -A _TMUXER_VALID_LAYOUT_ARR=( ['tiled']=1 ['even-horizontal']=1 ['even-vertical']=1 ['main-horizontal']=1 ['main-vertical']=1 )
 # utility vars
+# shellcheck disable=SC2155
 readonly _TMUXER_TMUX_RUNNING=$(tmux info &> /dev/null && echo $?)
 declare -a _TMUXER_REQUIRED_COMMANDS=( 'cat' 'head' 'realpath' 'sed' 'sort' 'ssh' 'tmux' )
 TMUXER_WINDOW_NUMBER=0
@@ -67,9 +68,9 @@ while (( "$#" > 0 )); do
             if [[ "$2" ]]; then
                 TMUXER_COMMAND="$_TMUXER_SUBST_STRING"
                 TMUXER_BLANK=1
-                count="$(printf '%d\n' ${2} 2>/dev/null)"
-                if [[ $count > 0 ]]; then
-                    for (( i=0; i<$count; i++ )); do
+                count="$(printf '%d\n' "${2}" 2>/dev/null)"
+                if [[ $count -gt 0 ]]; then
+                    for (( i = 0; i < count; i++ )); do
                         TMUXER_PANES+=("")
                     done
                 fi
@@ -154,20 +155,24 @@ done
 
 # check that layout is valid
 if [[ ! -v _TMUXER_VALID_LAYOUT_ARR["$TMUXER_LAYOUT"] ]]; then
+    # shellcheck disable=SC2016
     die 'Layout provided is not a valid Tmux layout: "$TMUXER_LAYOUT"'
 fi
 
 # check if we're running from config file or command line
-if [[ ! -z "$TMUXER_CONFIG_FILE" ]]; then
+if [[ -n "$TMUXER_CONFIG_FILE" ]]; then
     # check if absolute path
-    if [[ -f "$(realpath $TMUXER_CONFIG_FILE)" ]]; then
-        source "$(realpath $TMUXER_CONFIG_FILE)"
+    if [[ -f "$(realpath "$TMUXER_CONFIG_FILE")" ]]; then
+        # shellcheck disable=SC1090
+        source "$(realpath "$TMUXER_CONFIG_FILE")"
     # check if path relative to current working dir
-    elif [[ -f "$(realpath $(pwd)/$TMUXER_CONFIG_FILE)" ]]; then
-        source "$(realpath $(pwd)/$TMUXER_CONFIG_FILE)"
+    elif [[ -f "$(realpath "$(pwd)/$TMUXER_CONFIG_FILE")" ]]; then
+        # shellcheck disable=SC1090
+        source "$(realpath "$(pwd)/$TMUXER_CONFIG_FILE")"
     # check if path relative to XDG_CONFIG_HOME based default directory
-    elif [[ -f "$(realpath ${_TMUXER_DEFAULT_CONFIG_DIR/%\//}/$TMUXER_CONFIG_FILE)" ]]; then
-        source "$(realpath ${_TMUXER_DEFAULT_CONFIG_DIR/%\//}/$TMUXER_CONFIG_FILE)"
+    elif [[ -f "$(realpath "${_TMUXER_DEFAULT_CONFIG_DIR/%\//}/$TMUXER_CONFIG_FILE")" ]]; then
+        # shellcheck disable=SC1090
+        source "$(realpath "${_TMUXER_DEFAULT_CONFIG_DIR/%\//}/$TMUXER_CONFIG_FILE")"
     else
         die "Could not find config file: $TMUXER_CONFIG_FILE"
     fi
@@ -261,7 +266,7 @@ tmux select-layout -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}" "${TMUXER_LAYO
 tmux select-pane -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}.0"
 
 # if window name provided, set it
-if [[ ! -z "$TMUXER_WINDOW_NAME" ]]; then
+if [[ -n "$TMUXER_WINDOW_NAME" ]]; then
     tmux rename-window -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}" "$TMUXER_WINDOW_NAME"
 fi
 

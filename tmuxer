@@ -21,6 +21,8 @@ declare -A _TMUXER_VALID_LAYOUT_ARR=( ['tiled']=1 ['even-horizontal']=1 ['even-v
 # shellcheck disable=SC2155
 readonly _TMUXER_TMUX_RUNNING=$(tmux info &> /dev/null && echo $?)
 declare -a _TMUXER_REQUIRED_COMMANDS=( 'cat' 'head' 'realpath' 'sed' 'sort' 'ssh' 'tmux' )
+# shellcheck disable=SC2155
+readonly _TMUXER_BASE_PANE_INDEX="$(tmux show-options -g pane-base-index | cut -d' ' -f2)"
 TMUXER_WINDOW_NUMBER=0
 TMUXER_SESSION=
 TMUXER_DUMP_CONFIG=0
@@ -257,13 +259,13 @@ if [[ "$TMUXER_DISABLE_SYNC" == 0 ]]; then
 fi
 
 # kill off empty 1st pane
-tmux kill-pane -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}.0"
+tmux kill-pane -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}.${_TMUXER_BASE_PANE_INDEX:-0}"
 
 # final layout adjustment
 tmux select-layout -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}" "${TMUXER_LAYOUT}"
 
 # move back to first pane for handing off to user
-tmux select-pane -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}.0"
+tmux select-pane -t "${TMUXER_SESSION}:${TMUXER_WINDOW_NUMBER}.${_TMUXER_BASE_PANE_INDEX:-0}"
 
 # if window name provided, set it
 if [[ -n "$TMUXER_WINDOW_NAME" ]]; then
